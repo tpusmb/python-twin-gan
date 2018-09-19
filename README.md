@@ -46,7 +46,7 @@ The `input_image_path` can be either one single image or a path containing image
 
 You can found the original project [here](https://github.com/jerryli27/TwinGAN):
 
-##Troubleshooting
+## Troubleshooting
 
 If you have any issue regarding the install/deployment of the engine,
 first check the version of pip
