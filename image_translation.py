@@ -7,8 +7,6 @@ import logging.handlers
 
 import numpy as np
 import tensorflow as tf
-import util_io
-import timeit
 import cv2
 
 PYTHON_LOGGER = logging.getLogger(__name__)
