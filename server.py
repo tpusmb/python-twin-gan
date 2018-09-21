@@ -56,6 +56,7 @@ class Worker(threading.Thread):
         """
         super().__init__()
         self.translation_algorithm_model_path = translation_algorithm_model_path
+        self.image_width_height = image_width_height
 
         PYTHON_LOGGER.info("Start rabbit mq connection with the worker {}".format(self.translation_algorithm_model_path))
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=server_ip))
@@ -74,7 +75,7 @@ class Worker(threading.Thread):
                                    queue=queue_name,
                                    no_ack=True)
 
-        self.algorithm_translation = ImageTranslation(translation_algorithm_model_path, image_width_height)
+        self.algorithm_translation = None
 
     @staticmethod
     def string_to_cv2_image(base64_string):
@@ -126,6 +127,7 @@ class Worker(threading.Thread):
         :return:
         """
         PYTHON_LOGGER.info("Start the thread {}".format(self.translation_algorithm_model_path))
+        self.algorithm_translation = ImageTranslation(self.translation_algorithm_model_path, self.image_width_height)
         self.channel.start_consuming()
 
 
@@ -138,26 +140,20 @@ class Server:
         """
         PYTHON_LOGGER.info("Start rabbit mq connection")
 
-        thread_list = list()
+        self.thread_list = list()
 
         for transform_name in TRANSFORM_TASK:
             model_path, img_width_height = TRANSFORM_TASK[transform_name]
-            thread_list.append(Worker(ip, transform_name, model_path, img_width_height))
-
-        PYTHON_LOGGER.info("Start all algorithm")
-        for worker in thread_list:
-            worker.run()
-
-        PYTHON_LOGGER.info("Wait the end of algorithm")
-        for worker in thread_list:
-            worker.join()
+            self.thread_list.append(Worker(ip, transform_name, model_path, img_width_height))
 
     def start(self):
         """
         Start lisening
         :return:
         """
-
+        PYTHON_LOGGER.info("Start all algorithm")
+        for worker in self.thread_list:
+            worker.start()
 
     def stop(self):
         """
@@ -165,7 +161,9 @@ class Server:
         :return:
         """
         PYTHON_LOGGER.info("Stop the server")
-        self.connection.close()
+        PYTHON_LOGGER.info("Wait the end of algorithm")
+        for worker in self.thread_list:
+            worker.join()
 
 
 if __name__ == "__main__":
