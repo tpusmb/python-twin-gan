@@ -24,6 +24,7 @@ import pika
 from PIL import Image
 from image_translation import ImageTranslation
 from docopt import docopt
+import threading
 
 PYTHON_LOGGER = logging.getLogger(__name__)
 if not os.path.exists("log"):
@@ -40,24 +41,24 @@ PYTHON_LOGGER.setLevel(logging.DEBUG)
 
 FOLDER_ABSOLUTE_PATH = os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
 
-TRANSFORM_TASK = ["cat", "anime"]
-
-ANIME_MODEL = "twingan_256/256"
-ANIME_HEIGHT_WIDTH = 256
-
-CAT_MODEL = "human_to_cat_128/128"
-CAT_HEIGHT_WIDTH = 1287
+TRANSFORM_TASK = {"cat": ["human_to_cat_128/128", 128], "anime": ["twingan_256/256", 256]}
 
 
-class Server:
+class Worker(threading.Thread):
 
-    def __init__(self, ip):
+    def __init__(self, server_ip, routing_key, translation_algorithm_model_path, image_width_height):
         """
-        Connect to a rabbit mq
-        :param ip: (string) ip of the rabbit mq server
+
+        :param server_ip:
+        :param routing_key:
+        :param translation_algorithm_model_path:
+        :param image_width_height:
         """
-        PYTHON_LOGGER.info("Start rabbit mq connection")
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=ip))
+        super().__init__()
+        self.translation_algorithm_model_path = translation_algorithm_model_path
+
+        PYTHON_LOGGER.info("Start rabbit mq connection with the worker {}".format(self.translation_algorithm_model_path))
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=server_ip))
         self.channel = self.connection.channel()
 
         self.channel.exchange_declare(exchange='task',
@@ -65,16 +66,15 @@ class Server:
 
         result = self.channel.queue_declare(exclusive=True)
         queue_name = result.method.queue
-        for routing_key in TRANSFORM_TASK:
-            self.channel.queue_bind(exchange='task',
-                                    queue=queue_name,
-                                    routing_key=routing_key)
-        self.channel.basic_consume(self.callback,
+        self.channel.queue_bind(exchange='task',
+                                queue=queue_name,
+                                routing_key=routing_key)
+
+        self.channel.basic_consume(self.call_back,
                                    queue=queue_name,
                                    no_ack=True)
 
-        self.cat_translation = ImageTranslation(CAT_MODEL, 128)
-        # self.anime_translation = ImageTranslation(ANIME_MODEL, 256)
+        self.algorithm_translation = ImageTranslation(translation_algorithm_model_path, image_width_height)
 
     @staticmethod
     def string_to_cv2_image(base64_string):
@@ -99,19 +99,15 @@ class Server:
         # 2 - convert to byte 64 and trasform to string remove the b' symbol
         return str(base64.b64encode(buffer))[2:]
 
-    def callback(self, ch, method, _, body):
+    def call_back(self, ch, method, _, body):
 
         PYTHON_LOGGER.info("Get message with key {}".format(method.routing_key))
         cv2_image = self.string_to_cv2_image(body)
 
-        if method.routing_key.lower().strip() == "cat":
-            PYTHON_LOGGER.info("Start cat translation")
-            output_image = self.cat_translation.translate(cv2_image)
-        elif method.routing_key.lower().strip() == "anime":
-            PYTHON_LOGGER.info("Start anime translation")
-            output_image = self.anime_translation.translate(cv2_image)
-        else:
-            PYTHON_LOGGER.error("Error key set to none")
+        try:
+            output_image = self.algorithm_translation.translate(cv2_image)
+        except Exception as e:
+            PYTHON_LOGGER.error("Error in the image translation: {}".format(e))
             output_image = None
 
         if output_image is None:
@@ -124,13 +120,44 @@ class Server:
                                    routing_key="result",
                                    body=body_string)
 
+    def run(self):
+        """
+
+        :return:
+        """
+        PYTHON_LOGGER.info("Start the thread {}".format(self.translation_algorithm_model_path))
+        self.channel.start_consuming()
+
+
+class Server:
+
+    def __init__(self, ip):
+        """
+        Connect to a rabbit mq
+        :param ip: (string) ip of the rabbit mq server
+        """
+        PYTHON_LOGGER.info("Start rabbit mq connection")
+
+        thread_list = list()
+
+        for transform_name in TRANSFORM_TASK:
+            model_path, img_width_height = TRANSFORM_TASK[transform_name]
+            thread_list.append(Worker(ip, transform_name, model_path, img_width_height))
+
+        PYTHON_LOGGER.info("Start all algorithm")
+        for worker in thread_list:
+            worker.run()
+
+        PYTHON_LOGGER.info("Wait the end of algorithm")
+        for worker in thread_list:
+            worker.join()
+
     def start(self):
         """
         Start lisening
         :return:
         """
-        PYTHON_LOGGER.info("Start the server to exit type CTRL+C")
-        self.channel.start_consuming()
+
 
     def stop(self):
         """
