@@ -41,10 +41,14 @@ PYTHON_LOGGER.setLevel(logging.DEBUG)
 
 FOLDER_ABSOLUTE_PATH = os.path.normpath(os.path.dirname(os.path.abspath(__file__)))
 
-TRANSFORM_TASK = {"cat": ["human_to_cat_128/128", 128], "anime": ["twingan_256/256", 256]}
+TRANSFORM_TASK = {"cat": [os.path.join(FOLDER_ABSOLUTE_PATH, "human_to_cat_128", "128"), 128],
+                  "anime": [os.path.join(FOLDER_ABSOLUTE_PATH, "twingan_256", "256"), 256]}
 
 
 class Worker(threading.Thread):
+    """
+    This worker load tensorflow model and if is get a message from rabbit mq is translate the input image
+    """
 
     def __init__(self, server_ip, routing_key, translation_algorithm_model_path, image_width_height):
         """
@@ -58,7 +62,8 @@ class Worker(threading.Thread):
         self.translation_algorithm_model_path = translation_algorithm_model_path
         self.image_width_height = image_width_height
 
-        PYTHON_LOGGER.info("Start rabbit mq connection with the worker {}".format(self.translation_algorithm_model_path))
+        PYTHON_LOGGER.info("Start rabbit mq connection with the worker "
+                           "{}".format(self.translation_algorithm_model_path))
         self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=server_ip))
         self.channel = self.connection.channel()
 
@@ -97,15 +102,20 @@ class Worker(threading.Thread):
         """
         # 1 - Transform the image to byte
         _, buffer = cv2.imencode('.jpg', cv2_image)
-        # 2 - convert to byte 64 and trasform to string remove the b' symbol
+        # 2 - convert to byte 64 and transform to string remove the b' symbol
         return str(base64.b64encode(buffer))[2:]
 
     def call_back(self, ch, method, _, body):
+        """
+        Rabbit mq call back function
+        """
 
         PYTHON_LOGGER.info("Get message with key {}".format(method.routing_key))
+        # 1 - Transform the input image to a cv2 image
         cv2_image = self.string_to_cv2_image(body)
 
         try:
+            # 2 - Apply a translation
             output_image = self.algorithm_translation.translate(cv2_image)
         except Exception as e:
             PYTHON_LOGGER.error("Error in the image translation: {}".format(e))
@@ -114,24 +124,29 @@ class Worker(threading.Thread):
         if output_image is None:
             body_string = "none"
         else:
+            # 3 - Now transform to a base64 string
             body_string = self.cv2_image_to_string(output_image)
 
         PYTHON_LOGGER.info("Send the output image")
+        # 4 - Send the new image to the rabbit mq server
         self.channel.basic_publish(exchange='task',
                                    routing_key="result",
                                    body=body_string)
 
     def run(self):
         """
-
-        :return:
+        Run the thread and load the tensorflow model
         """
         PYTHON_LOGGER.info("Start the thread {}".format(self.translation_algorithm_model_path))
+        # We need to wait the start signal to be chur that the tensorflow session his in a thread
         self.algorithm_translation = ImageTranslation(self.translation_algorithm_model_path, self.image_width_height)
         self.channel.start_consuming()
 
 
 class Server:
+    """
+    This class connect in a rabbit mq server to get the android app images
+    """
 
     def __init__(self, ip):
         """
