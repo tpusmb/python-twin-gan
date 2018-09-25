@@ -54,7 +54,7 @@ def cv2_image_to_string(cv2_image):
     return str(base64.b64encode(buffer))[2:]
 
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='192.168.1.64'))
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='192.168.1.3'))
 channel = connection.channel()
 
 channel.exchange_declare(exchange='task',
@@ -79,7 +79,7 @@ channel.basic_consume(callback,
                       queue=queue_name,
                       no_ack=True)
 
-img = cv2.imread("../demo/toto.png")
+img = cv2.imread("../demo/testmoi.png")
 message = cv2_image_to_string(img)
 
 channel.basic_publish(exchange='task',

@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
+"""
+Main script to load tansorflow model and use to translate humane face to cat, anime or other
+"""
+
 from __future__ import absolute_import
 import os
 import logging.handlers
@@ -26,11 +31,14 @@ FOLDER_ABSOLUTE_PATH = os.path.normpath(os.path.dirname(os.path.abspath(__file__
 
 
 class ImageTranslation(object):
+    """
+    Class to translate a human face to cat face or anime face...
+    """
 
     def __init__(self, model_path, image_hw=256, input_tensor_name="sources_ph",
                  output_tensor_name="custom_generated_t_style_source:0"):
         """
-
+        Constructor to load the tensorflow model
         :param model_path: (string) Absolute path to the model to load
         :param image_hw:(int) Height and width of the output image
         :param input_tensor_name: Name of the input layer for tensorflow

@@ -5,10 +5,15 @@
 
 ## Use Pretrained Model.
 
-For a pretrained model (Human to anime), you can download it [here](https://drive.google.com/open?id=1dXfqAODQxB2uNhyQANtZICAjwhNMWnbl):
-For a pretrained model (Human to cat), you can download it [here](https://drive.google.com/open?id=1UJEqlH_1sfdmWs6MXKV4H69NGad0rdUB):
+For a pretrained model (Human to anime), you can download it [here](https://drive.google.com/open?id=1dXfqAODQxB2uNhyQANtZICAjwhNMWnbl)
+
+For a pretrained model (Human to cat), you can download it [here](https://drive.google.com/open?id=1UJEqlH_1sfdmWs6MXKV4H69NGad0rdUB)
+
+Unzip and put the content directly in the root directory of the project
+
 
 ## installation.
+
 
 For this project you will need a python3 version.
 
@@ -34,13 +39,35 @@ If you want to exit your virtualenv:
 
     deactivate
     
-Run the following command to translate the demo inputs.
+    
+## Rabbit mq configuration
 
-```
-python inference/image_translation_infer.py --model_path="twingan_256/256" --image_hw=256 --input_tensor_name="sources_ph" --output_tensor_name="custom_generated_t_style_source:0" --input_image_path="./demo/inference_input/" --output_image_path="./demo/inference_output/"
-```
 
-The `input_image_path` can be either one single image or a path containing images.
+To able connect to the rabbit mq server remotly you will need to creat a file 
+
+    rabbitmq.config
+
+in the tha rabbit mq path
+
+    Generic UNIX - $RABBITMQ_HOME/etc/rabbitmq/
+    Debian - /etc/rabbitmq/
+    RPM - /etc/rabbitmq/
+    Mac OSX (Homebrew) - ${install_prefix}/etc/rabbitmq/, the Homebrew prefix is usually /usr/local
+    Windows - %APPDATA%\RabbitMQ\
+    
+And add this line  
+
+    [{rabbit, [{loopback_users, []}]}].
+    
+Restart rabbit mq.
+
+
+## Launch
+
+
+Now you can launch the server just with this command? **Remember to activate your virtualenv**
+
+    python server.py <ip>
 
 ## Original git repository
 
