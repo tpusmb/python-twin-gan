@@ -52,11 +52,12 @@ class Worker(threading.Thread):
 
     def __init__(self, server_ip, routing_key, translation_algorithm_model_path, image_width_height):
         """
-
-        :param server_ip:
-        :param routing_key:
-        :param translation_algorithm_model_path:
-        :param image_width_height:
+        Constructor to start a rabbit mq connection
+        :param server_ip: (String) Ip of the rabbit mq server
+        :param routing_key: (String) routing key of the call back function
+        :param translation_algorithm_model_path: (String) Absolute path of the tensorflow model
+        :param image_width_height: (int) out network image out for human to cat is 128
+                                    for human to anime is 256
         """
         super().__init__()
         self.translation_algorithm_model_path = translation_algorithm_model_path
@@ -72,6 +73,7 @@ class Worker(threading.Thread):
 
         result = self.channel.queue_declare(exclusive=True)
         queue_name = result.method.queue
+        # Set the lisning key for the
         self.channel.queue_bind(exchange='task',
                                 queue=queue_name,
                                 routing_key=routing_key)
@@ -139,7 +141,9 @@ class Worker(threading.Thread):
         """
         PYTHON_LOGGER.info("Start the thread {}".format(self.translation_algorithm_model_path))
         # We need to wait the start signal to be chur that the tensorflow session his in a thread
+        PYTHON_LOGGER.info("Load the model {}".format(self.translation_algorithm_model_path))
         self.algorithm_translation = ImageTranslation(self.translation_algorithm_model_path, self.image_width_height)
+        PYTHON_LOGGER.info("Thread {} load !".format(self.translation_algorithm_model_path))
         self.channel.start_consuming()
 
 
