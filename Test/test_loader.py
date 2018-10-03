@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Test the tensorflow board graph visualisation with a save meta graph
+Befor you will need to run the test_saver.py
+"""
+
 from __future__ import absolute_import
 import os
 import timeit
@@ -29,7 +34,8 @@ if __name__ == "__main__":
         saver = tf.train.import_meta_graph("./model_ex1.meta")
         saver.restore(sess, "./model_ex1")
         result = sess.run("v4:0", feed_dict={"v1:0": 12.0, "v2:0": 3.3})
-        print(result)
+        PYTHON_LOGGER.info(result)
 
     train_writer = tf.summary.FileWriter(LOG_DIR)
     train_writer.add_graph(sess.graph)
+    PYTHON_LOGGER.info("Now you can look the graph by launching this command: tensorboard --logdir=/logs/tests/1/")

@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+Generate a simple tensorflow graph and save with the tensorflow Saver
+"""
+
 from __future__ import absolute_import
 import os
 import timeit

@@ -89,7 +89,7 @@ Now you can launch the server just with this command? **Remember to activate you
 
     python server.py <ip>
     
-Now you can run the android application. Mor information of the App directory [here](https://github.com/tpusmb/android)
+Now you can run the android application. More information of the App directory [here](https://github.com/tpusmb/android)
 
 ## Original git repository
 

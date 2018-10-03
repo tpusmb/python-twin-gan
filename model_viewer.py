@@ -77,7 +77,8 @@ if __name__ == "__main__":
         saver = tf.train.import_meta_graph(os.path.join(model_exp, meta_file))
         saver.restore(tf.get_default_session(), os.path.join(model_exp, ckpt_file))
 
-    # Make the write the current graph for tensorboard
+    # Now write the graph to a log directory
     train_writer = tf.summary.FileWriter(LOG_DIR)
+    # Add the graph to the log directory
     train_writer.add_graph(sess.graph)
     PYTHON_LOGGER.info("Now you can look the graph by launching this command: tensorboard --logdir=/logs/tests/1/")
