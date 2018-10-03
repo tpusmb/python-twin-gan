@@ -88,10 +88,12 @@ Enable the plugin management
 Now you can launch the server just with this command? **Remember to activate your virtualenv**
 
     python server.py <ip>
+    
+Now you can run the android application. Mor information of the App directory [here](https://github.com/tpusmb/android)
 
 ## Original git repository
 
-You can found the original project [here](https://github.com/jerryli27/TwinGAN):
+You can found the original project [here](https://github.com/jerryli27/TwinGAN)
 
 ## Troubleshooting
 
