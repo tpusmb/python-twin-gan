@@ -36,7 +36,7 @@ class ImageTranslation(object):
     """
 
     def __init__(self, model_path, image_hw=256, input_tensor_name="sources_ph",
-                 output_tensor_name="custom_generated_t_style_source:0"):
+                     output_tensor_name="custom_generated_t_style_source:0"):
         """
         Constructor to load the tensorflow model
         :param model_path: (string) Absolute path to the model to load
