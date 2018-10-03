@@ -45,7 +45,8 @@ If you want to exit your virtualenv:
 
 To able connect to the rabbit mq server remotly you will need to creat a file 
 
-    rabbitmq.config
+    rabbitmq.config (For linux)
+    rabbitmq.conf (For windows)
 
 in the tha rabbit mq path
 
@@ -57,10 +58,29 @@ in the tha rabbit mq path
     
 And add this line  
 
-    [{rabbit, [{loopback_users, []}]}].
+    [{rabbit, [{loopback_users, []}]}]. (For linux)
+    loopback_users = none (For windows)
     
-Restart rabbit mq.
+Enable the plugin management
 
+    rabbitmq-plugins.bat enable rabbitmq_management (windows)
+    rabbitmq-plugins enable rabbitmq_management (Linux)
+    
+**Note**: On windows you will need to be in the `sbin` folder with a windows terminal. Where you install rabbit mq 
+    
+
+### Restart rabbit mq
+
+#### Windows: 
+
+1. go to the `sbin` folder with a windows terminal. Where you install rabbit mq
+2. Stop the rabbit mq service with this command `.\rabbitmq-service.bat remove`
+3. Start rabbit mq sever in the temial with this command `.\rabbitmq-server.bat`
+
+
+#### Linux:
+
+`sudo service rabbitmq-server restart`
 
 ## Launch
 
@@ -68,10 +88,12 @@ Restart rabbit mq.
 Now you can launch the server just with this command? **Remember to activate your virtualenv**
 
     python server.py <ip>
+    
+Now you can run the android application. More information of the App directory [here](https://github.com/tpusmb/android)
 
 ## Original git repository
 
-You can found the original project [here](https://github.com/jerryli27/TwinGAN):
+You can found the original project [here](https://github.com/jerryli27/TwinGAN)
 
 ## Troubleshooting
 

@@ -105,7 +105,7 @@ class Worker(threading.Thread):
         # 1 - Transform the image to byte
         _, buffer = cv2.imencode('.jpg', cv2_image)
         # 2 - convert to byte 64 and transform to string remove the b' symbol
-        return str(base64.b64encode(buffer))[2:]
+        return base64.b64encode(buffer).decode()
 
     def call_back(self, ch, method, _, body):
         """
@@ -114,7 +114,7 @@ class Worker(threading.Thread):
 
         PYTHON_LOGGER.info("Get message with key {}".format(method.routing_key))
         # 1 - Transform the input image to a cv2 image
-        cv2_image = self.string_to_cv2_image(body)
+        cv2_image = self.string_to_cv2_image(body.decode())
 
         try:
             # 2 - Apply a translation
